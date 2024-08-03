@@ -166,7 +166,6 @@ class _OtkazmalarScreenState extends State<OtkazmalarScreen> {
                     borderSide: BorderSide.none,
                   ),
                 ),
-                inputFormatters: [CardNumberInputFormatter()],
                 keyboardType: TextInputType.number,
               ),
               const SizedBox(height: 24),
