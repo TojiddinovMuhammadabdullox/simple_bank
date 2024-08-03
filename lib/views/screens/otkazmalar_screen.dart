@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:simple_bank/controller/card_controller.dart';
 import 'package:simple_bank/models/card_model.dart';
-import 'package:simple_bank/views/screens/main_screen.dart';
 
 class OtkazmalarScreen extends StatefulWidget {
   const OtkazmalarScreen({super.key});
