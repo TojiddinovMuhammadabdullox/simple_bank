@@ -1,11 +1,9 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:simple_bank/controller/card_controller.dart';
 import 'package:simple_bank/models/card_model.dart';
 import 'package:simple_bank/views/screens/history_screen.dart';
 import 'package:simple_bank/views/screens/home_screen.dart';
-import 'package:simple_bank/views/screens/login_screen.dart';
 import 'package:simple_bank/views/screens/otkazmalar_screen.dart';
 
 class MainScreen extends StatefulWidget {
@@ -45,7 +43,6 @@ class _MainScreenState extends State<MainScreen> {
     });
   }
 
- 
   @override
   Widget build(BuildContext context) {
     return Scaffold(

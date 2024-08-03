@@ -1,10 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:simple_bank/controller/card_controller.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:simple_bank/bloc/card_bloc.dart'; // Adjust the import based on your project structure
 import 'package:simple_bank/models/card_model.dart';
 import 'package:simple_bank/views/screens/login_screen.dart';
-import 'package:simple_bank/views/screens/main_screen.dart';
 import 'package:simple_bank/views/widgets/card_widget.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -15,20 +15,14 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final CardController _cardController = CardController();
-  final List<CardModel> _cards = [];
-
   @override
   void initState() {
     super.initState();
     _fetchCards();
   }
 
-  void _fetchCards() async {
-    List<CardModel> fetchedCards = await _cardController.fetchCards();
-    setState(() {
-      _cards.addAll(fetchedCards);
-    });
+  void _fetchCards() {
+    BlocProvider.of<CardBloc>(context).add(FetchCards());
   }
 
   void _showAddCardDialog() {
@@ -53,7 +47,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 inputFormatters: [
                   FilteringTextInputFormatter.digitsOnly,
                   LengthLimitingTextInputFormatter(16),
-                  CardNumberInputFormatter(),
                 ],
               ),
               TextField(
@@ -74,7 +67,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 inputFormatters: [
                   FilteringTextInputFormatter.digitsOnly,
                   LengthLimitingTextInputFormatter(4),
-                  ExpiryDateInputFormatter(),
                 ],
               ),
             ],
@@ -87,17 +79,14 @@ class _HomeScreenState extends State<HomeScreen> {
               child: const Text('Cancel'),
             ),
             TextButton(
-              onPressed: () async {
+              onPressed: () {
                 CardModel newCard = CardModel(
                   cardNumber: cardNumberController.text,
                   balance: balanceController.text,
                   cardHolderName: cardHolderNameController.text,
                   expiryDate: expiryDateController.text,
                 );
-                await _cardController.addCard(newCard);
-                setState(() {
-                  _cards.add(newCard);
-                });
+                BlocProvider.of<CardBloc>(context).add(AddCard(newCard));
                 Navigator.of(context).pop();
               },
               child: const Text('Add'),
@@ -111,7 +100,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void _logout() async {
     await FirebaseAuth.instance.signOut();
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (context) => LoginScreen()),
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
     );
   }
 
@@ -121,38 +110,58 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: const Text('Home'),
         centerTitle: true,
-        actions: [IconButton(onPressed: _logout, icon: Icon(Icons.logout))],
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView.builder(
-              itemCount: _cards.length,
-              itemBuilder: (context, index) {
-                return CardWidget(cardModel: _cards[index]);
-              },
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.deepPurple,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    )),
-                onPressed: _showAddCardDialog,
-                child: const Text(
-                  'Add Card',
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-            ),
-          ),
+        actions: [
+          IconButton(onPressed: _logout, icon: const Icon(Icons.logout))
         ],
+      ),
+      body: BlocBuilder<CardBloc, CardState>(
+        builder: (context, state) {
+          if (state is CardLoading) {
+            return Center(child: CircularProgressIndicator());
+          } else if (state is CardLoaded) {
+            final cards = state.cards;
+            return Column(
+              children: [
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: cards.length,
+                    itemBuilder: (context, index) {
+                      return CardWidget(
+                        cardModel: cards[index],
+                        onDelete: () {
+                          BlocProvider.of<CardBloc>(context)
+                              .add(DeleteCard(cards[index].cardNumber));
+                        },
+                      );
+                    },
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          )),
+                      onPressed: _showAddCardDialog,
+                      child: const Text(
+                        'Add Card',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          } else if (state is CardError) {
+            return Center(child: Text(state.message));
+          }
+          return Container();
+        },
       ),
     );
   }

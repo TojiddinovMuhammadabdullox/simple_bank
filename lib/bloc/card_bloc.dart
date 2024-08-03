@@ -2,7 +2,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:simple_bank/models/card_model.dart';
 import 'package:simple_bank/repositories/card_repository.dart';
 
-// Events
 abstract class CardEvent {}
 
 class FetchCards extends CardEvent {}
@@ -23,7 +22,6 @@ class DeleteCard extends CardEvent {
   DeleteCard(this.cardNumber);
 }
 
-// States
 abstract class CardState {}
 
 class CardInitial extends CardState {}
@@ -40,7 +38,6 @@ class CardError extends CardState {
   CardError(this.message);
 }
 
-// BLoC
 class CardBloc extends Bloc<CardEvent, CardState> {
   final CardRepository repository;
 
